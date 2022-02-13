@@ -9,6 +9,13 @@ contract FlashSwap {
     Token public token;
     uint256 public rate = 100;
 
+    event TokenPurchase(
+        address _account,
+        address token,
+        uint256 amount,
+        uint256 rate
+    );
+
     constructor(Token _token) public {
         token = _token;
     }
@@ -21,6 +28,12 @@ contract FlashSwap {
         */
         uint256 tokenAmount = msg.value * rate;
 
+        // make sure the DEX has more than the buyer is requesting
+        require(token.balanceOf(address(this)) >= tokenAmount);
+
         token.transfer(msg.sender, tokenAmount);
+
+        // emit an event
+        emit TokenPurchase(msg.sender, address(token), tokenAmount, rate);
     }
 }
