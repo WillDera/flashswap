@@ -17,14 +17,22 @@ function tokenHelper(n) {
   return web3.utils.toWei(n, "ether");
 }
 
-contract("FlashSwap", (accounts) => {
+contract("FlashSwap", ([deployer, investor]) => {
   let flashSwap, token;
 
   before(async () => {
-    flashSwap = await FlashSwap.new();
     token = await Token.new();
+    flashSwap = await FlashSwap.new(token.address);
     // transfer all tokens to FlashSwap (DEX)
     await token.transfer(flashSwap.address, tokenHelper("1000000"));
+  });
+
+  describe("Token deployment", async () => {
+    it("contract has a name", async () => {
+      const name = await token.name();
+
+      assert.equal(name, "DApp Token");
+    });
   });
 
   describe("FlashSwap deployment", async () => {
@@ -40,11 +48,21 @@ contract("FlashSwap", (accounts) => {
     });
   });
 
-  describe("Token deployment", async () => {
-    it("contract has a name", async () => {
-      const name = await token.name();
+  describe("buyTokens()", async () => {
+    let result;
 
-      assert.equal(name, "DApp Token");
+    before(async () => {
+      // Purchase tokens before each test
+      result = await flashSwap.buyTokens({
+        from: investor,
+        value: web3.utils.toWei("1", "ether"),
+      });
+    });
+
+    it("Allows users to instantly purchase tokens at a fixed price", async () => {
+      // check investor balance after purchase
+      let investorBalance = await token.balanceOf(investor);
+      assert.equal(investorBalance.toString(), tokenHelper("100"));
     });
   });
 });
