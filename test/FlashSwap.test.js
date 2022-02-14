@@ -28,6 +28,7 @@ contract("FlashSwap", ([deployer, investor]) => {
     await token.transfer(flashSwap.address, tokenHelper("1000000"));
   });
 
+  /* TEST FOR TOKEN deployment */
   describe("Token deployment", async () => {
     it("contract has a name", async () => {
       const name = await token.name();
@@ -36,6 +37,7 @@ contract("FlashSwap", ([deployer, investor]) => {
     });
   });
 
+  /* TEST FOR FlashSwap deployment */
   describe("FlashSwap deployment", async () => {
     it("contract has a name", async () => {
       const name = await flashSwap.name();
@@ -49,6 +51,7 @@ contract("FlashSwap", ([deployer, investor]) => {
     });
   });
 
+  /* TEST FOR BUYING TOKENS */
   describe("buyTokens()", async () => {
     let result;
 
@@ -82,6 +85,38 @@ contract("FlashSwap", ([deployer, investor]) => {
       assert.equal(event.token, token.address);
       assert.equal(event.amount.toString(), tokenHelper("100").toString());
       assert.equal(event.rate.toString(), "100");
+    });
+  });
+
+  describe("sellTokens()", async () => {
+    let result;
+
+    before(async () => {
+      // Approve token before sale
+      await token.approve(flashSwap.address, tokenHelper("100"), {
+        from: investor,
+      });
+      // Sell tokens before each test
+      result = await flashSwap.sellTokens(tokenHelper("100"), {
+        from: investor,
+      });
+    });
+
+    it("Allows users to instantly sell tokens at a fixed price", async () => {
+      // check investor balance after purchase
+      let investorBalance = await token.balanceOf(investor);
+      assert.equal(investorBalance.toString(), tokenHelper("0"));
+
+      // check flashswap balance after purchase
+      let flashswapBalance;
+
+      // check dapp balance went up
+      flashswapBalance = await token.balanceOf(flashSwap.address);
+      assert.equal(flashswapBalance.toString(), tokenHelper("1000000"));
+
+      // check eth balance went down
+      flashswapBalance = await web3.eth.getBalance(flashSwap.address);
+      assert.equal(flashswapBalance.toString(), web3.utils.toWei("0", "ether"));
     });
   });
 });

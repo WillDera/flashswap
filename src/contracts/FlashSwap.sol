@@ -36,4 +36,13 @@ contract FlashSwap {
         // emit an event
         emit TokenPurchase(msg.sender, address(token), tokenAmount, rate);
     }
+
+    function sellTokens(uint256 _amount) public {
+        // Calculate amount of Eth to redeem
+        uint256 etherAmount = _amount / rate;
+
+        // Perform sale
+        token.transferFrom(msg.sender, address(this), _amount);
+        msg.sender.transfer(etherAmount);
+    }
 }
