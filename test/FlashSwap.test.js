@@ -2,7 +2,6 @@
 /* eslint-disable no-undef */
 
 const { assert } = require("chai");
-const { default: Web3 } = require("web3");
 
 // import contracts
 const FlashSwap = artifacts.require("FlashSwap");
@@ -117,6 +116,17 @@ contract("FlashSwap", ([deployer, investor]) => {
       // check eth balance went down
       flashswapBalance = await web3.eth.getBalance(flashSwap.address);
       assert.equal(flashswapBalance.toString(), web3.utils.toWei("0", "ether"));
+
+      // check logs to ensure right event was emitted with correct data
+      const event = await result.logs[0].args;
+      assert.equal(event._account, investor);
+      assert.equal(event.token, token.address);
+      assert.equal(event.amount.toString(), tokenHelper("100").toString());
+      assert.equal(event.rate.toString(), "100");
+
+      // FAILURE: investor can't sell more tokens than they have
+      await flashSwap.sellTokens(tokenHelper("500"), { from: investor }).should
+        .be.rejected;
     });
   });
 });

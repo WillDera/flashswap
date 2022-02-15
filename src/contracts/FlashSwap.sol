@@ -16,6 +16,13 @@ contract FlashSwap {
         uint256 rate
     );
 
+    event TokenSale(
+        address _account,
+        address token,
+        uint256 amount,
+        uint256 rate
+    );
+
     constructor(Token _token) public {
         token = _token;
     }
@@ -38,11 +45,20 @@ contract FlashSwap {
     }
 
     function sellTokens(uint256 _amount) public {
+        // User cant sell more tokens than they have
+        require(token.balanceOf(msg.sender) >= _amount);
+
         // Calculate amount of Eth to redeem
         uint256 etherAmount = _amount / rate;
+
+        // Require that FlashSwap has enough ether
+        require(address(this).balance >= etherAmount);
 
         // Perform sale
         token.transferFrom(msg.sender, address(this), _amount);
         msg.sender.transfer(etherAmount);
+
+        // emit an event
+        emit TokenSale(msg.sender, address(token), _amount, rate);
     }
 }
