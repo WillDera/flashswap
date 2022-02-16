@@ -95,18 +95,18 @@ class App extends Component {
 
   sellTokens = (tokenAmount) => {
     this.setState({ loading: true });
-    // this.state.token.methods
-    //   .approve(this.state.flashSwap.address, tokenAmount)
-    //   .send({ from: this.state.account })
-    //   .on("transactionHash", (hash) => {
-    //     this.state.flashSwap.methods
-    //       .sellTokens(tokenAmount)
-    //       .send({ from: this.state.account })
-    //       .on("transactionHash", (hash) => {
-    //         this.setState({ loading: false });
-    //       });
-    //   });
-    //! FIX: Bug with flashSwap.address returning undefined
+    //* FIXED: flashSwap._address not flashSwap.address
+    this.state.token.methods
+      .approve(this.state.flashSwap._address, tokenAmount)
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        this.state.flashSwap.methods
+          .sellTokens(tokenAmount)
+          .send({ from: this.state.account })
+          .on("transactionHash", (hash) => {
+            this.setState({ loading: false });
+          });
+      });
   };
 
   constructor(props) {
